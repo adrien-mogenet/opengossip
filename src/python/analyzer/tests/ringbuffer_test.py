@@ -41,6 +41,7 @@ class RingBufferTest(unittest.TestCase):
         buffer.append('21')
         self.assertEqual(buffer.get(0), '21')
         self.assertEqual(buffer.get(1), 42)
+        self.assertEqual(buffer[1], 42)
 
     def test_size(self):
         buffer = RingBuffer(10)
@@ -50,6 +51,28 @@ class RingBufferTest(unittest.TestCase):
         for i in range(11):
             buffer.append(i)
         self.assertEqual(buffer.size, 10)
+
+    def test_iter(self):
+        buffer = RingBuffer(10)
+        for i in range(5):
+            buffer.append(i)
+        for i in buffer:
+            self.assertTrue(buffer[i] is not None)
+
+    def test_distinct(self):
+        buffer = RingBuffer(10)
+        d = buffer.distinct()
+        self.assertEqual(len(d), 0)
+        buffer.append(42)
+        self.assertEqual(len(buffer.distinct()), 1)
+        self.assertEqual(buffer.distinct()[0], 42)
+        buffer.append(42)
+        self.assertEqual(len(buffer.distinct()), 1)
+        self.assertEqual(buffer.distinct()[0], 42)
+        buffer.append(21)
+        self.assertEqual(len(buffer.distinct()), 2)
+        self.assertEqual(buffer.distinct()[0], 42)
+        self.assertEqual(buffer.distinct()[1], 21)
 
 if __name__ == '__main__':
     unittest.main()

@@ -33,9 +33,21 @@ class RingBuffer(object):
         """Get raw data"""
         return self.data
 
+    def __iter__(self):
+        """Allow to iterate over the buffer. Beware that we are returning a new
+           list"""
+        result = []
+        for i in range(self.size):
+            result.append(self.get(i))
+        return result.__iter__()
+
     def get(self, pos):
         """Retrieve element a given position"""
         return self.data[self.max_size - 1 - pos]
+
+    def __getitem__(self, key):
+        """Override the [] operator"""
+        return self.get(key)
 
     def last(self):
         """Get last element"""
@@ -50,4 +62,10 @@ class RingBuffer(object):
 
     def distinct(self):
         """Retrieve list of distinct elements"""
-        return dict.fromkeys(self.data).keys()
+        if self.size < self.max_size:
+            list = []
+            for i in range(self.size):
+                list.append(self.get(i))
+        else:
+            list = self.data
+        return dict.fromkeys(list).keys()
