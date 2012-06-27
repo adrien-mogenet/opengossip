@@ -36,13 +36,29 @@ if [ ! -d $PNG_FOLDER ]; then
   exit 2
 fi
 
+# Some series stand in just one column, then we display the resulting curve
+# showing evolution of values.
+# If there are 2 columns, we currently consider that we are ploting (x,y)
+# datapoints (even if `x` is a timestamp)
+
 for file in $DAT_FOLDER/*.dat; do
     echo "Processing ${file}"
+    spaces=`echo $(tail -n 1 $file) | grep -c ' '`
     filename=`basename ${file} .dat`
-    gnuplot <<EOF
+    if [[ $spaces -eq 0 ]]; then
+	$GNUPLOT <<EOF
 set term png size 800,480
 set output "$PNG_FOLDER/${filename}.png"
 set pointsize 0.1
 plot "${file}" w linespoints linecolor rgb "#336699" title "${filename}"
 EOF
+    fi
+    if [[ $spaces -eq 1 ]]; then
+    $GNUPLOT <<EOF
+set term png size 800,480
+set output "$PNG_FOLDER/${filename}.png"
+set pointsize 2
+plot "${file}" using 2:1 title "${filename}"
+EOF
+    fi
 done
