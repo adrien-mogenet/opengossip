@@ -20,6 +20,7 @@ class NumericRingBuffer(RingBuffer):
 
     def mean(self):
         """Compute the current mean value"""
+
         total = 0
         if self.size == 0: return 0
         for elt in self:
@@ -28,11 +29,13 @@ class NumericRingBuffer(RingBuffer):
 
     def p_x(self, x):
         """Get probablity of seeing 'x' into the buffer"""
+
         if self.size == 0: return 0
         return float(self.count(x) / float(self.size))
 
     def expected_value(self):
         """Get current expected value"""
+
         result = 0.0
         if self.size == 0: return 0
         for elt in self.distinct():
@@ -41,7 +44,10 @@ class NumericRingBuffer(RingBuffer):
 
     def shannon_entropy(self, base=2, blur=0):
         """Get current entropy of values within the current buffer. Getting '0'
-           means there is no surprise, we still get the same value"""
+           means there is no surprise, we still get the same value.
+           FIXME: Use a blur parameter? (or should it be applied at an higher
+           level ?"""
+
         entropy = 0.0
         X = self.distinct()
         n = len(X)
@@ -50,3 +56,13 @@ class NumericRingBuffer(RingBuffer):
             P_i = self.p_x(X_i)
             entropy += P_i * math.log(P_i, base)
         return -entropy
+
+    def variance(self):
+        """Get current variance"""
+
+        variance = 0.0
+        mean = self.mean()
+        for i in range(self.size):
+            X_i = self.get(i)
+            variance += self.p_x(X_i) * ((X_i - mean)**2)
+        return variance

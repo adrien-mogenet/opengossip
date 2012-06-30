@@ -61,5 +61,9 @@ class NumericRingBufferTest(unittest.TestCase):
         self.assertTrue(buffer.shannon_entropy(10) != 0)
         self.assertTrue(buffer.shannon_entropy(2) < math.log(1000, 2))
 
+    def test_variance(self):
+        buffer = NumericRingBuffer(10)
+        self.assertEqual(buffer.variance(), 0)
+
 if __name__ == '__main__':
     unittest.main()
