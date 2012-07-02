@@ -42,6 +42,8 @@ class RingBufferTest(unittest.TestCase):
         self.assertEqual(buffer.get(0), '21')
         self.assertEqual(buffer.get(1), 42)
         self.assertEqual(buffer[1], 42)
+        buffer.append('33')
+        self.assertEqual(buffer[1:3], ['21', 42])
 
     def test_size(self):
         buffer = RingBuffer(10)

@@ -57,8 +57,8 @@ EOF
     $GNUPLOT <<EOF
 set term png size 800,480
 set output "$PNG_FOLDER/${filename}.png"
-set pointsize 2
-plot "${file}" using 2:1 title "${filename}"
+set pointsize 0.1
+plot "${file}" using 1:2 w linespoint linecolor rgb "#336699" title "${filename}"
 EOF
     fi
 done

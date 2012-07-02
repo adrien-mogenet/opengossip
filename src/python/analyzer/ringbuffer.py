@@ -47,7 +47,10 @@ class RingBuffer(object):
 
     def __getitem__(self, key):
         """Override the [] operator"""
-        return self.get(key)
+        if isinstance(key, slice):
+            return [self.get(pos) for pos in range(key.start, key.stop)]
+        else:
+            return self.get(key)
 
     def last(self):
         """Get last element"""
