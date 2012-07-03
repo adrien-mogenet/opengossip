@@ -18,12 +18,14 @@ class RingBuffer(object):
 
     def __init__(self, max_size):
         """Init with max size"""
+
         self.max_size = max_size
         self.data = [None for i in xrange(max_size)]
         self.size = 0
 
     def append(self, x):
         """Append a new element"""
+
         self.data.pop(0)
         self.data.append(x)
         if (self.size < self.max_size):
@@ -31,11 +33,13 @@ class RingBuffer(object):
 
     def get_data(self):
         """Get raw data"""
+
         return self.data
 
     def __iter__(self):
         """Allow to iterate over the buffer. Beware that we are returning a new
            list"""
+
         result = []
         for i in range(self.size):
             result.append(self.get(i))
@@ -43,10 +47,12 @@ class RingBuffer(object):
 
     def get(self, pos):
         """Retrieve element a given position"""
+
         return self.data[self.max_size - 1 - pos]
 
     def __getitem__(self, key):
         """Override the [] operator"""
+
         if isinstance(key, slice):
             return [self.get(pos) for pos in range(key.start, key.stop)]
         else:
@@ -54,6 +60,7 @@ class RingBuffer(object):
 
     def last(self):
         """Get last element"""
+
         if (self.size == 0):
             return None
         else:
@@ -61,11 +68,13 @@ class RingBuffer(object):
 
     def count(self, x):
         """Count occurrences of x"""
+
         return self.data.count(x)
 
     def distinct(self):
         """Retrieve list of distinct elements. We do not consider the
            initial 'None' elements."""
+
         if self.size < self.max_size:
             list = [self.get(i) for i in range(self.size)]
         else:
