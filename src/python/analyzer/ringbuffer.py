@@ -64,11 +64,10 @@ class RingBuffer(object):
         return self.data.count(x)
 
     def distinct(self):
-        """Retrieve list of distinct elements"""
+        """Retrieve list of distinct elements. We do not consider the
+           initial 'None' elements."""
         if self.size < self.max_size:
-            list = []
-            for i in range(self.size):
-                list.append(self.get(i))
+            list = [self.get(i) for i in range(self.size)]
         else:
             list = self.data
         return dict.fromkeys(list).keys()
