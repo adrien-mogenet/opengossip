@@ -50,7 +50,7 @@ for file in $DAT_FOLDER/*.dat; do
 set term png size 800,480
 set output "$PNG_FOLDER/${filename}.png"
 set pointsize 0.1
-plot "${file}" w linespoints linecolor rgb "#336699" title "${filename}"
+plot "${file}" using 1 w lines linecolor rgb "#336699" title "${filename}"
 EOF
     fi
     if [[ $spaces -eq 1 ]]; then
@@ -58,7 +58,7 @@ EOF
 set term png size 800,480
 set output "$PNG_FOLDER/${filename}.png"
 set pointsize 0.1
-plot "${file}" using 1:2 w linespoint linecolor rgb "#336699" title "${filename}"
+plot "${file}" using 1:2 w filledcurve linecolor rgb "#336699" title "${filename}"
 EOF
     fi
 done
