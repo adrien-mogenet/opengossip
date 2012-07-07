@@ -58,7 +58,8 @@ EOF
 set term png size 800,480
 set output "$PNG_FOLDER/${filename}.png"
 set pointsize 0.1
-plot "${file}" using 1:2 w filledcurve linecolor rgb "#336699" title "${filename}"
+set yrange [0:2]
+plot "${file}" using 1:2 w lines linecolor rgb "#336699" title "${filename}"
 EOF
     fi
 done
