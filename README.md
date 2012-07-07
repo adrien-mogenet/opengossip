@@ -19,6 +19,7 @@ own needs.
 ## Current results
 Here is the graphic representing a load average (based on 1 last minute) :
 ![load-average](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/original-serie.png)
+
 And now, how to automatically detect spikes ? Using classification algorithms mentionned above (here a
 [hierarchical clustering](http://en.wikipedia.org/wiki/Hierarchical_clustering) technic) OpenGossip is able to 
 detect abrupt changes, strange behaviors or related events.
