@@ -17,11 +17,27 @@ own needs.
 
 
 ## Current results
-
 Here is the graphic representing a load average (based on 1 last minute) :
 ![load-average](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/original-serie.png)
-
 And now, how to automatically detect spikes ? Using classification algorithms mentionned above (here a
 [hierarchical clustering](http://en.wikipedia.org/wiki/Hierarchical_clustering) technic) OpenGossip is able to 
 detect abrupt changes, strange behaviors or related events.
 ![anomalies](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/anomalies.png)
+
+
+## How does it work ?
+OpenGossip is gathering several models to play with for metrics analysis. It extracts features for further analysis.
+Let's discover a few of them:
+  * mean
+  * standard deviation
+  * slope
+  * entropy
+
+OpenGossip is learning a lot from these characteristics and will be able to classify your data as normal or
+as anomaly. Currently, learning model(s) is/are not yet established, and the "perfect" model is still pending... 
+Sometimes Markov models gave the best results, sometimes naive threshold-heuristics still do.
+
+
+## How much can I trust OpenGossip calculus ?
+It is still in development, and even at an early stage. It currently mostly uses naive implementation (sometimes
+very high complexity) and is continuously developed to determine best way to find anomalies among your metrics.
