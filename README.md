@@ -16,14 +16,15 @@ programs that are running on it. OpenGossip has been designed as a toolbox that 
 own needs.
 
 
-## Current results
-Here is the graphic representing a load average (based on 1 last minute) :
-![load-average](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/original-serie.png)
+## Requirements
+OpenGossip is mainly written in Python so far. For the best use of the current source code, you might want to install:
+  * python >= 2.7
+  * numpy
+  * pypy >= 1.9
+  * numpypy
+  * gnuplot >= 4.2
 
-And now, how to automatically detect spikes ? Using classification algorithms mentionned above (here a
-[hierarchical clustering](http://en.wikipedia.org/wiki/Hierarchical_clustering) technic) OpenGossip is able to 
-detect abrupt changes, strange behaviors or related events.
-![anomalies](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/anomalies.png)
+`Pypy` and `numpypy` are both not strictly required, but are speeding up the execution (at least x2 faster).
 
 
 ## How does it work ?
@@ -37,6 +38,16 @@ Let's discover a few of them:
 OpenGossip is learning a lot from these characteristics and will be able to classify your data as normal or
 as anomaly. Currently, learning model(s) is/are not yet established, and the "perfect" model is still pending... 
 Sometimes Markov models gave the best results, sometimes naive threshold-heuristics still do.
+
+
+## Current results
+Here is the graphic representing a load average (based on 1 last minute) :
+![load-average](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/original-serie.png)
+
+And now, how to automatically detect spikes ? Using classification algorithms mentionned above (here a
+[hierarchical clustering](http://en.wikipedia.org/wiki/Hierarchical_clustering) technic) OpenGossip is able to 
+detect abrupt changes, strange behaviors or related events.
+![anomalies](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/anomalies.png)
 
 
 ## How much can I trust OpenGossip calculus ?
