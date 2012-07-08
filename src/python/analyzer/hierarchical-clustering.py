@@ -27,16 +27,16 @@ from numericringbuffer import NumericRingBuffer
 
 BUFFER_SIZE = 100
 
-def metric_dist(v, w):
-    """Custom distance function between two vectors"""
+def squared_euclidian(v, w):
+    """Square euclidian distance function between two vectors"""
 
     return sum((v - w) ** 2)
 
 
-def L2dist(v1,v2):
+def euclidian(v, w):
     """Standard euclidian distance function, for standard use"""
 
-    return sqrt(sum((v1 - v2) ** 2))
+    return sqrt(sum((v - w) ** 2))
 
 
 def merge_vectors(v, w):
@@ -66,9 +66,12 @@ class cluster_node:
         self.meta = meta
 
 
-class Classifier(object):
+class HierarchicalClassifier(object):
 
     def __init__(self, output_folder):
+        """Constructor. 'Counter' is the number of values we have added
+           so far."""
+
         self.values = NumericRingBuffer(BUFFER_SIZE)
         self.nodes = []
         self.counter = 0
@@ -76,10 +79,15 @@ class Classifier(object):
         self.orig = open(output_folder + '/original-serie.dat', 'wb')
 
     def __del__(self):
+        """Destructor. Properly close opened file descriptors."""
+
         self.output.close()
         self.orig.close()
 
     def add(self, value):
+        """Add a new value. We store the current number of the value in the
+           map of metadata in 'n' key."""
+
         self.values.append(value)
         self.counter += 1
         if self.values.size > 1:
@@ -94,7 +102,7 @@ class Classifier(object):
             self.nodes.append(cluster_node(vec=vector, meta=metadata))
 
     def build_set_rec(self, tree, marker):
-        """Fill an array recursively from given tree"""
+        """Fill an array recursively from given tree."""
 
         if not tree:
             return []
@@ -105,19 +113,21 @@ class Classifier(object):
             + self.build_set_rec(tree.right, marker)
 
     def build_sets(self, tree):
-        """Build two classes from the given tree"""
+        """Build two classes from the given tree."""
 
         return [] + self.build_set_rec(tree.left, 0) \
             + self.build_set_rec(tree.right, 1)
 
     def find_anomalies(self):
-        tree = self.hcluster(self.nodes, metric_dist)
+        """Try to find anomalies according to what we have seen so far."""
+
+        tree = self.hcluster(self.nodes, squared_euclidian)
         sets = self.build_sets(tree)
         sets = sorted(sets, key = lambda elt: elt[0])
         for elt in sets:
             self.output.write(str(int(elt[0])) + ' ' + str(elt[1]) + '\n')
 
-    def hcluster(self, nodes, distance=L2dist):
+    def hcluster(self, nodes, distance=euclidian):
         """Classif list of elements.
            Principle: each row start within it's individual cluster, then the
            matrix is processed to find closest rows until each row fits in a
@@ -184,7 +194,7 @@ if __name__ == "__main__":
         sys.exit(1)
     filename = sys.argv[1]
     output = sys.argv[2]
-    c = Classifier(output)
+    c = HierarchicalClassifier(output)
     f = open(filename, 'rb')
     for line in f:
         c.add(float(line.split(' ')[1].replace(',', '.')))
