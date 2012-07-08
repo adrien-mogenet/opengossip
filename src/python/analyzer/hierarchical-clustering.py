@@ -45,14 +45,17 @@ def merge_vectors(v, w):
     return [(v[i] + w[i]) / 2.0 for i in range(len(v))]
 
 
-class cluster_node:
+class ClusterNode:
+    """Represents a node of hierarchical tree that will be built by our
+       algorithm."""
+
     def __init__(self, vec, left=None, right=None, distance=0.0, id=None,
                  meta={}):
         """Ctor
         Args:
            vector:   vector of features
-           left:     left cluster_node's child
-           right:    right cluster_node's child
+           left:     left ClusterNode's child
+           right:    right ClusterNode's child
            distance: current's distance
            id:       used when clustering. Positive id means it's a leaf
            count:    used for weighted average
@@ -99,7 +102,7 @@ class HierarchicalClassifier(object):
                 self.values.expected_value(),
             ]
             metadata = { 'n': self.counter, 'v': value }
-            self.nodes.append(cluster_node(vec=vector, meta=metadata))
+            self.nodes.append(ClusterNode(vec=vector, meta=metadata))
 
     def build_set_rec(self, tree, marker):
         """Fill an array recursively from given tree."""
@@ -134,15 +137,15 @@ class HierarchicalClassifier(object):
            global hierarchical tree.
 
         Args:
-           nodes:      array of cluster_node's
+           nodes:      array of ClusterNode's
            distance:  function computing distance between 2 vectors"""
 
         distances = {}  # cache of (v, w) distances
         currentclustid = -1
 
         # clusters are initially just the individual rows
-        clust = [cluster_node(vec=array(nodes[i].vec), id=i,
-                              meta=nodes[i].meta) \
+        clust = [ClusterNode(vec=array(nodes[i].vec), id=i,
+                             meta=nodes[i].meta) \
                      for i in range(len(nodes))]
 
         while len(clust) > 1:
@@ -172,11 +175,11 @@ class HierarchicalClassifier(object):
                                           clust[lowestpair[1]].vec)
 
             # create the new cluster
-            newcluster = cluster_node(array(merged_vector),
-                                      left=clust[lowestpair[0]],
-                                      right=clust[lowestpair[1]],
-                                      distance=closest,
-                                      id=currentclustid)
+            newcluster = ClusterNode(array(merged_vector),
+                                     left=clust[lowestpair[0]],
+                                     right=clust[lowestpair[1]],
+                                     distance=closest,
+                                     id=currentclustid)
 
             # cluster ids that weren't in the original set are negative
             currentclustid -= 1
@@ -185,7 +188,6 @@ class HierarchicalClassifier(object):
             clust.append(newcluster)
 
         return clust[0]
-
 
 
 if __name__ == "__main__":
