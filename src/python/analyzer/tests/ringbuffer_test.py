@@ -77,7 +77,7 @@ class RingBufferTest(unittest.TestCase):
         self.assertEqual(buffer.distinct()[1], 21)
 
     def test_sort(self):
-        buffer = RingBuffer(5)
+        buffer = RingBuffer(10)
         buffer.append(3)
         buffer.append(1)
         buffer.append('zoo')

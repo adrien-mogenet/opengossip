@@ -14,12 +14,16 @@
 
 class RingBuffer(object):
     """Circular buffer, implementing convenient methods. Suppose to contain
-       numerical values"""
+       numerical values.
+
+       TODO: Put array logic into a traditional array structure.
+       """
 
     def __init__(self, max_size):
         """Init with max size"""
 
         self.max_size = max_size
+        # FIXME: Use zeros()
         self.data = [None for i in xrange(max_size)]
         self.size = 0
 
@@ -84,6 +88,6 @@ class RingBuffer(object):
     def sort(self):
         """Retrieve list of sorted data."""
 
-        sorted = self.data
+        sorted = self[0:self.size]
         sorted.sort()
         return sorted
