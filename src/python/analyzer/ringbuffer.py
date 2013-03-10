@@ -80,3 +80,10 @@ class RingBuffer(object):
         else:
             list = self.data
         return dict.fromkeys(list).keys()
+
+    def sort(self):
+        """Retrieve list of sorted data."""
+
+        sorted = self.data
+        sorted.sort()
+        return sorted
