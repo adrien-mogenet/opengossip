@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 
 # This file is part of OpenGossip.
 #
@@ -25,7 +25,7 @@ from numpy import *
 from ringbuffer import RingBuffer
 from numericringbuffer import NumericRingBuffer
 
-BUFFER_SIZE = 100
+BUFFER_SIZE = 20
 
 def squared_euclidian(v, w):
     """Square euclidian distance function between two vectors"""
@@ -149,6 +149,8 @@ class HierarchicalClassifier(object):
                      for i in range(len(nodes))]
 
         while len(clust) > 1:
+
+            print('%d remaining clusters' % len(clust))
             lowestpair = (0, 1)
             closest = distance(clust[0].vec, clust[1].vec)
 

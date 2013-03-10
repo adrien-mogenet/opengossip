@@ -1,4 +1,4 @@
-#!/usr/bin/env
+#!/usr/bin/env python
 
 # This file is part of OpenGossip.
 #
@@ -64,6 +64,15 @@ class NumericRingBufferTest(unittest.TestCase):
     def test_variance(self):
         buffer = NumericRingBuffer(10)
         self.assertEqual(buffer.variance(), 0)
+
+    def test_distribution(self):
+        buffer = NumericRingBuffer(100)
+        for i in range(100):
+            buffer.append(100 - i)
+        self.assertEqual(buffer.percentage(0), 1)
+        self.assertEqual(buffer.percentage(90), 91)
+        self.assertEqual(buffer.percentage(100), 100)
+        self.assertEqual(buffer.percentage(101), 100)
 
 if __name__ == '__main__':
     unittest.main()
