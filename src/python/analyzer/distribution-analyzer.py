@@ -57,6 +57,9 @@ class DistributionAnalyzer:
 
 def parse_args(argv):
     parser = OptionParser(description='Get an overview of your dataset.')
+    parser.add_option('-f', '--file', dest='file', metavar='FILEPATH')
+    parser.add_option('-s', '--separator', dest='sep', metavar='SEP', default=' ',
+                      help='Separator used when splitting input columns.')
     parser.add_option('-c', '--column-index', default=0, dest='cindex', type='int',
                       help='Index of data to consider, starting from 0.')
     parser.add_option('-l', '--lower-than', dest='lt', metavar='VALUE',
@@ -65,22 +68,23 @@ def parse_args(argv):
     parser.add_option('-g', '--greater-than', dest='gt', metavar='VALUE',
                       type='float',
                       help='Get percentage of values greater than the supplied value.')
-    parser.add_option('-f', '--file', dest='file', metavar='FILEPATH')
-    return parser.parse_args(args=argv)
+    (options, args) = parser.parse_args(args=argv)
+    if options.file is None:
+        parser.print_help()
+        parser.error('No input file.')
+    return (options, args)
 
 
 if __name__ == "__main__":
     (options, args) = parse_args(sys.argv[1:])
-    if options.file is None:
-        parser.print_help()
-        parser.error('No input file.')
     analyzer = DistributionAnalyzer()
     action_performed = False
     index = options.cindex
+    sep = options.sep
     f = open(options.file, 'rb')
     for line in f:
         try:
-            analyzer.add(float(line.split(' ')[index].replace(',', '.')))
+            analyzer.add(float(line.split(sep)[index].replace(',', '.')))
         except IndexError as e:
             print("Ignored line, column %i not found." % index)
     f.close()
