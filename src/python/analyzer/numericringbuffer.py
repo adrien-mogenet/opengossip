@@ -66,3 +66,11 @@ class NumericRingBuffer(RingBuffer):
             X_i = self.get(i)
             variance += self.p_x(X_i) * ((X_i - mean)**2)
         return variance
+
+    def percentage(self, percentage):
+        """Get the value under which there are xx% of the values."""
+
+        sorted = self.sort()
+        size = len(sorted)
+        index = min(size - 1, int(size * float(percentage / 100.0)))
+        return sorted[index]
