@@ -1,4 +1,6 @@
 *.py[co]
+results
+tmp
 
 # Packages
 *.egg
@@ -27,3 +29,14 @@ pip-log.txt
 .mr.developer.cfg
 
 .DS_Store
+*.eps
+
+target/
+classes/
+checkouts/
+pom.xml
+pom.xml.asc
+*.jar
+*.class
+.lein-*
+/.nrepl-port
