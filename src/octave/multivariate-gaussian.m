@@ -39,23 +39,37 @@ function visualizeFit(X, mu, Sigma, dim=2)
   hold off;
 end
 
-function visualizeOutliers(X, mu, Sigma, epsilon, dim=2)
+function outliers = getOutliers(X, mu, Sigma, epsilon)
   # Find anomalies and plot them
   #  - X: input vectors (m x n)
   #  - mu: means vector (n x 1)
   #  - Sigma: covariance matrix (n x n)
   #  - epsilon: threshold
+  #
+  # Returns:
+  #  - vectors of detected items
   p = multivariateGaussian(X, mu, Sigma);
+  hist(p, 10);
+  print -deps histogram.eps;
   outliers = find(p < epsilon);
-  csvwrite('anomalies.txt', outliers)
-  fprintf("%d anomalies have been detected\n", length(outliers))
+end
+
+function visualizeOutliers(X, outliers, mu, Sigma, dim=2)
+  # Find anomalies and plot them
+  #  - X: input vectors (m x n)
+  #  - outliers: vectors of detected items
+  #  - mu: means vector (n x 1)
+  #  - Sigma: covariance matrix (n x n)
+  p = multivariateGaussian(X, mu, Sigma);
   hold on
-  if dim == 2
-    plot(X(outliers, 1), X(outliers, 2), 'ro', 'LineWidth', 2,
-         'MarkerSize', 10);
-  elseif dim == 3
-    plot3(X(outliers, 1), X(outliers, 2), p(outliers), 'ro',
-          'LineWidth', 2,  'MarkerSize', 10);
+  if size(X, 2) == 2
+    if dim == 2
+      plot(X(outliers, 1), X(outliers, 2), 'ro', 'LineWidth', 2,
+           'MarkerSize', 10);
+    elseif dim == 3
+      plot3(X(outliers, 1), X(outliers, 2), p(outliers), 'ro',
+            'LineWidth', 2,  'MarkerSize', 10);
+    end
   end
   hold off
 end
@@ -86,42 +100,61 @@ function p = multivariateGaussian(X, mu, Sigma)
       exp(-0.5 * sum(bsxfun(@times, X * pinv(Sigma), X), 2));
 end
 
-
-# m: size of training set
-# n: number of features
-#
-# Input file is a [m x n] matrix
-if (length(argv()) == 0)
-  printf("Usage: %s <input file>", program_name())
-  exit
+function X = testAdjustInput(data)
+  # For testing purpose, adjust our testing input
+  # Give sense to our features
+  compaction_queue = data(:, 1);
+  ios_in_progress = data(:, 2);
+  loadavg = data(:, 3);
+  meminfo_active = data(:, 4);
+  meminfo_swap = data(:, 5);
+  # Perform some feature scaling to adjust gaussian distribution
+  meminfo_swap = (log(meminfo_swap) ./ 4) .^ 2.5;
+  loadavg = loadavg .* 10;
+  # Build vector we'll use later and compute gaussian parameters
+  X = [loadavg meminfo_swap];
 end
-input_file = argv(){1};
-data = load('-ascii', input_file);
 
-# Threshold to detect anomalies
-EPSILON = 0.005;
+################################## MAIN #######################################
 
 # Plotting dimensions
 DIMENSIONS = 3;
 
-# Give sense to our features
-compaction_queue = data(:, 1);
-ios_in_progress = data(:, 2);
-loadavg = data(:, 3);
-meminfo_active = data(:, 4);
-meminfo_swap = data(:, 5);
+# m: size of training set
+# n: number of features
 
-# Perform some feature scaling to adjust gaussian distribution
-meminfo_swap = (log(meminfo_swap) ./ 4) .^ 2.5;
-loadavg = loadavg .* 10;
+# Process parameters
+if (length(argv()) == 0)
+  printf("Usage: %s <input file>", program_name())
+  exit
+end
 
-# Build vector we'll use later and compute gaussian parameters
-X = [loadavg meminfo_swap];
+# Input file is a [m x n] matrix
+input_file = argv(){1};
+
+# Threshold to detect anomalies
+if length(argv()) >= 2
+  EPSILON = str2num(argv(){2});
+else
+  EPSILON = 0.005;
+end
+
+# Load data and
+data = load('-ascii', input_file);
+X = data;
+# X = testAdjustInput(data);
 [mu Sigma] = estimateGaussian(X);
 
+# Detect anomalies
+outliers = getOutliers(X, mu, Sigma, EPSILON);
+csvwrite('anomalies.txt', outliers)
+fprintf("%d anomalies have been detected\n", length(outliers))
+
 # Plot everything
-visualizeFit(X,  mu, Sigma, DIMENSIONS);
-visualizeOutliers(X, mu, Sigma, EPSILON, DIMENSIONS)
-xlabel('loadavg * 10');
-ylabel('log(swap)');
-print -deps result.eps
+if size(X, 2) == 2
+  visualizeFit(X,  mu, Sigma, DIMENSIONS);
+  visualizeOutliers(X, outliers, mu, Sigma, DIMENSIONS)
+  xlabel('loadavg * 10');
+  ylabel('log(swap)');
+  print -deps result.eps
+end
