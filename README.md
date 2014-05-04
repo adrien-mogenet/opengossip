@@ -50,6 +50,8 @@ And now, how to automatically detect spikes ? Using classification algorithms me
 detect abrupt changes, strange behaviors or related events.
 ![anomalies](https://dl.dropbox.com/u/720826/opengossip/load-avg-1min/anomalies.png)
 
+Here is a Multivariate Gaussian implementation, in Clojure (using Incanter):
+![multivariate](https://dl.dropbox.com/s/g8bq9nw1e5ndkc4/incanter-mg.png)
 
 ## How much can I trust OpenGossip calculus ?
 It is still in development, and even at an early stage. It currently mostly uses naive implementation (sometimes
