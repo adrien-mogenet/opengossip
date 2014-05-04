@@ -17,19 +17,20 @@ own needs.
 
 
 ## Requirements
-OpenGossip is mainly written in Python so far. For the best use of the current source code, you might want to install:
+OpenGossip is mainly written in Python so far, and Octave is used when prototyping different algorithms. For the best use of the current source code, you might want to install:
   * python >= 2.7
   * numpy
   * pypy >= 1.9
   * numpypy
   * gnuplot >= 4.2
+  * octave >= 3.7
 
 `Pypy` and `numpypy` are both not strictly required, but are speeding up the execution (at least x2 faster).
 
 
 ## How does it work ?
 OpenGossip is gathering several models to play with for metrics analysis. It extracts features for further analysis.
-Let's discover a few of them:
+For example, when dealing with time series, it will probably work with such features (among many others):
   * mean
   * standard deviation
   * slope
@@ -37,7 +38,7 @@ Let's discover a few of them:
 
 OpenGossip is learning a lot from these characteristics and will be able to classify your data as normal or
 as anomaly. Currently, learning model(s) is/are not yet established, and the "perfect" model is still pending... 
-Sometimes Markov models gave the best results, sometimes naive threshold-heuristics still do.
+Sometimes naive threshold-heuristics will get the best [F-Score](https://en.wikipedia.org/wiki/F1_score).
 
 
 ## Current results
