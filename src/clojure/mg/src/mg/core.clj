@@ -21,31 +21,35 @@
 ; Outlier detection threshold.
 (def threshold 1e-07)
 
-(defn join-all [k ds]
+(defn join-all
   "Join several datasets `ds' all together by their key `k'"
+  [k ds]
   "fixme")
 
-(defn estimate-gaussian [X]
+(defn estimate-gaussian
   "Returns gaussian parameters mu (mean vector) and sigma (covariance
-   matrix) of the input `X` matrix".
+  matrix) of the input `X` matrix".
+  [X]
   (let [[m n] (dim X)
         mu (div (reduce plus X) m)
         sigma (covariance X)]
     [mu sigma]))
 
-(defn pinv [X]
+(defn pinv
   "Returns the pseudoinverse of a matrix `X`; the coefficient vector
   of OLS is the dependent variable vector premultiplied by the
   pseudoinverse of the cofactor matrix `X`."
+  [X]
   {:pre [(matrix? X)]}
   (let [Xt (trans X)]
     (mmult (solve (mmult Xt X)) Xt)))
 
-(defn multivariate-normal [X mu sigma]
+(defn multivariate-normal
   "Computes the multivariate gaussian.
      X:      input vectors (m x n)
      mu:     means vector (n x 1)
      sigma:  covariance matrix (n x n)"
+  [X mu sigma]
   (let [n  (length mu)
         MU (repeat (nrow X) mu)
         X  (minus X MU)]
@@ -54,8 +58,9 @@
      (Math/pow (det sigma) -0.5)
      (exp (mult -0.5 (map sum (mult (mmult X (pinv sigma)) X)))))))
 
-(defn parse-file [filename]
+(defn parse-file
   "Parse a CSV file and build the matrix"
+  [filename]
   (let [ds (rename-cols
             {:col0 :metric :col1 :ts :col2 :val :col3 :host}
             (read-dataset filename :delim \space :header false))
@@ -67,16 +72,18 @@
      ($join [:host :host] ds-mean
             ($join [:host :host] ds-max ds-min)))))
 
-(defn view-results [X1 X2 groups]
+(defn view-results
   "Display results on a grid.
      X1:     Values for x1 axis
      X2:     Values for x2 axis
      groups: Vector of boolean (true = outlier)"
+  [X1 X2 groups]
   {:pre [(= (dim X1) (dim X2))]}
   (view (scatter-plot X1 X2 :group-by groups)))
 
-(defn process [filename]
+(defn process
   "Process input CSV file, find and display outliers."
+  [filename]
   (let [X          (parse-file filename)
         [mu sigma] (estimate-gaussian X)
         p          (multivariate-normal X mu sigma)
