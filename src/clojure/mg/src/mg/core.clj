@@ -99,7 +99,7 @@
         groups     (map (partial < threshold) p)
         X1         (sel X :cols 0)
         X2         (sel X :cols 1)]
-    #_(view-results X1 X2 groups)
+    (view-results X1 X2 groups)
     (println (extract-outliers p X))))
 
 (defn -main [& args]
