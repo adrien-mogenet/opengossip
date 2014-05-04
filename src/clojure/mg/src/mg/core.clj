@@ -28,7 +28,7 @@
 
 (defn estimate-gaussian
   "Returns gaussian parameters mu (mean vector) and sigma (covariance
-  matrix) of the input `X` matrix".
+  matrix) of the input `X` matrix."
   [X]
   (let [[m n] (dim X)
         mu (div (reduce plus X) m)
@@ -72,6 +72,15 @@
      ($join [:host :host] ds-mean
             ($join [:host :host] ds-max ds-min)))))
 
+(defn extract-outliers
+  "Returns list of nodes considered as outliers."
+  [p X]
+  (rename-cols
+   {:col-0 :p, :col-3 :host}
+   (reduce conj-rows (filter
+                      #(> threshold (sel % :cols 0 :rows 0))
+                      (to-matrix (conj-cols p X))))))
+
 (defn view-results
   "Display results on a grid.
      X1:     Values for x1 axis
@@ -90,7 +99,8 @@
         groups     (map (partial < threshold) p)
         X1         (sel X :cols 0)
         X2         (sel X :cols 1)]
-    (view-results X1 X2 groups)))
+    #_(view-results X1 X2 groups)
+    (println (extract-outliers p X))))
 
 (defn -main [& args]
   (process (first args)))
