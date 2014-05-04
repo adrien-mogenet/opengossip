@@ -74,3 +74,17 @@ class NumericRingBuffer(RingBuffer):
         size = len(sorted)
         index = min(size - 1, int(size * float(percentage / 100.0)))
         return sorted[index]
+
+    def min(self):
+        result = self[0]
+        for elt in self:
+            if elt < result:
+                result = elt
+        return result
+
+    def max(self):
+        result = self[0]
+        for elt in self:
+            if elt > result:
+                result = elt
+        return result
