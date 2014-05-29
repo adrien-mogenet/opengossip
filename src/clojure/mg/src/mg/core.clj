@@ -92,7 +92,7 @@
      :hosts hosts,
      :data (core/rename-cols
       {:col-0 :metric, :col-1 :host, :col-2 :val}
-      (conj-cols
+      (core/conj-cols
        ($map #(get metrics %) :col0 ds)
        ($map #(get hosts %) :col3 ds)
        ($ 1 ds)))}))
@@ -171,8 +171,8 @@
        (view-feature ($ v X) k)))
     (view-outliers X1 X2 states)
     (println "Outliers: "
-             (conj-cols ($ :p outliers)
-                        ($map #(get hosts (int %)) :host outliers)))))
+             (core/conj-cols ($ :p outliers)
+                             ($map #(get hosts (int %)) :host outliers)))))
 
 (defn -main [& args]
   (case (count args)
