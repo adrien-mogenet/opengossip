@@ -13,26 +13,21 @@
 (ns mg.core
   "<M>ultivariate <G>aussian computation"
   (:gen-class)
-  (:require [incanter.core :refer :all]
-            [incanter.stats :refer :all]
-            [incanter.io :refer :all]
-            [incanter.charts :refer :all]))
+  (:require [incanter.core   :refer :all :as core]
+            [incanter.stats  :refer :all :as stats]
+            [incanter.io     :refer :all :as io]
+            [incanter.charts :refer :all :as charts]))
 
 ; Outlier detection threshold.
-(def threshold 1e-07)
-
-(defn join-all
-  "Join several datasets `ds' all together by their key `k'"
-  [k ds]
-  "fixme")
+(def default-threshold 1e-05)
 
 (defn estimate-gaussian
   "Returns gaussian parameters mu (mean vector) and sigma (covariance
   matrix) of the input `X` matrix."
   [X]
-  (let [[m n] (dim X)
+  (let [[m n] (core/dim X)
         mu (div (reduce plus X) m)
-        sigma (covariance X)]
+        sigma (stats/covariance X)]
     [mu sigma]))
 
 (defn pinv
@@ -40,9 +35,10 @@
   of OLS is the dependent variable vector premultiplied by the
   pseudoinverse of the cofactor matrix `X`."
   [X]
-  {:pre [(matrix? X)]}
-  (let [Xt (trans X)]
-    (mmult (solve (mmult Xt X)) Xt)))
+  {:pre [(core/matrix? X)]}
+  (let [Xt  (core/trans X)
+        XtX (core/mmult Xt X)]
+    (mmult (core/solve X) Xt)))
 
 (defn multivariate-normal
   "Computes the multivariate gaussian.
@@ -50,57 +46,136 @@
      mu:     means vector (n x 1)
      sigma:  covariance matrix (n x n)"
   [X mu sigma]
-  (let [n  (length mu)
-        MU (repeat (nrow X) mu)
-        X  (minus X MU)]
-    (mult
+  (let [n  (core/length mu)
+        MU (repeat (core/nrow X) mu)
+        X  (core/minus X MU)]
+    (core/mult
      (Math/pow (* 2 Math/PI) (/ (- n) 2))
-     (Math/pow (det sigma) -0.5)
-     (exp (mult -0.5 (map sum (mult (mmult X (pinv sigma)) X)))))))
+     (Math/pow (core/det sigma) -0.5)
+     (exp
+      (core/mult -0.5 (map core/sum (mult (core/mmult X (pinv sigma)) X)))))))
 
-(defn parse-file
-  "Parse a CSV file and build the matrix"
-  [filename]
-  (let [ds (rename-cols
-            {:col0 :metric :col1 :ts :col2 :val :col3 :host}
-            (read-dataset filename :delim \space :header false))
-        ; aggregate :val, group by :host
-        ds-max  (rename-cols {:val :max} ($rollup :max :val :host ds))
-        ds-min  (rename-cols {:val :min} ($rollup :min :val :host ds))
-        ds-mean (rename-cols {:val :mean} ($rollup :mean :val :host ds))]
-    (to-matrix
-     ($join [:host :host] ds-mean
-            ($join [:host :host] ds-max ds-min)))))
+(defn agg
+  "Computes aggregation of `metric', using function `fn' on dataset `ds'.
+  Uses a unique column identifier to join sets without name conflicts."
+  [metric fn ds]
+  (core/rename-cols
+   {:val (keyword (subs (str fn "-" metric) 1))} ; strip leading ':'
+   ($rollup fn :val :host ds)))
+
+(defn aggegations
+  "Returns list of aggregated results for each host. This currently mostly
+  gives LAPACK DGESV issues (ie. a non reversible matrix)."
+  [metric ds]
+  (reduce
+   (partial $join [:host :host])
+   [(agg metric :sum ds)
+    (agg metric :min ds)
+    (agg metric :max ds)]))
+
+(defn columns-in-order
+  "Returns a list of expected columns order. Put :host as first column and
+   append the rest."
+  [cols]
+  (cons :host (filter #(not= :host %) cols)))
+
+(defn prepare-data
+  "Read OpenTSDB output file and build the matrix of numbers with metrics,
+  hosts and values. Returns a hash-map with :metrics, :hosts and :data as
+  keys."
+  [file]
+  (let [ds      ($ [0 2 3]
+                   (io/read-dataset file :delim \space :header false))
+        metrics (zipmap (distinct ($ 0 ds)) (range))
+        hosts   (zipmap (distinct ($ 2 ds)) (range))]
+    {:metrics metrics,
+     :hosts hosts,
+     :data (core/rename-cols
+      {:col-0 :metric, :col-1 :host, :col-2 :val}
+      (conj-cols
+       ($map #(get metrics %) :col0 ds)
+       ($map #(get hosts %) :col3 ds)
+       ($ 1 ds)))}))
+
+(defn group-data
+  "Build a dataset, grouped by each metric, with 1 row per host where all
+  the features of the metric is computed (sum, mean...)."
+  [ds]
+  (let [groups ($group-by :metric ds)]
+    (into (empty groups)
+          (for [[k v] groups]
+            {k (agg (:metric k) :mean v)}))))
+
+(defn summarize-data
+  "Build the matrix from input dataset."
+  [ds]
+  (let [groups (group-data ds)
+        grid   (reduce (partial $join [:host :host]) (vals groups))]
+    (core/to-matrix
+     (core/reorder-columns grid (columns-in-order (core/col-names grid))))))
+
+(defn keep-features
+  "Returns the summarized-data matrix without the 'host' columns, just keep
+  the features values."
+  [X]
+  ($ (rest (range (ncol X))) X))
+
+(defn mark-outliers
+  "Returns the input list of m elements with true if element is an outlier,
+  false otherwise."
+  [p epsilon]
+  (seq (map (partial > epsilon) p)))
 
 (defn extract-outliers
   "Returns list of nodes considered as outliers."
-  [p X]
-  (rename-cols
-   {:col-0 :p, :col-3 :host}
-   (reduce conj-rows (filter
-                      #(> threshold (sel % :cols 0 :rows 0))
-                      (to-matrix (conj-cols p X))))))
+  [p X epsilon]
+  (let [mapped   (core/to-matrix (core/conj-cols p X))
+        outliers (filter #(> epsilon (sel % :cols 0 :rows 0)) mapped)]
+    (core/rename-cols
+     {:col-0 :p, :col-1 :host}
+     (core/to-dataset
+      (reduce core/conj-rows outliers) :transpose true))))
 
-(defn view-results
+(defn view-outliers
   "Display results on a grid.
      X1:     Values for x1 axis
      X2:     Values for x2 axis
      groups: Vector of boolean (true = outlier)"
-  [X1 X2 groups]
+  [X1 X2 states]
   {:pre [(= (dim X1) (dim X2))]}
-  (view (scatter-plot X1 X2 :group-by groups)))
+  (let [plot (charts/scatter-plot X1 X2 :group-by states)]
+    (core/save plot "/tmp/test.png") ; TODO Don't hardcorde...
+    (core/view plot)))
+
+(defn view-feature
+  "Display histogram of input feature (m x 1 vector)."
+  [serie name]
+  (do
+    (view (charts/histogram serie :title name))))
 
 (defn process
-  "Process input CSV file, find and display outliers."
-  [filename]
-  (let [X          (parse-file filename)
+  "Process input OpenTSDB file, find and display outliers."
+  [filename threshold]
+  (let [data       (prepare-data filename)
+        M          (summarize-data (:data data)) ; the whole matrix
+        X          (keep-features M)             ; keep only values
         [mu sigma] (estimate-gaussian X)
         p          (multivariate-normal X mu sigma)
-        groups     (map (partial < threshold) p)
-        X1         (sel X :cols 0)
-        X2         (sel X :cols 1)]
-    (view-results X1 X2 groups)
-    (println (extract-outliers p X))))
+        states     (mark-outliers p threshold)
+        X1         ($ 0 X) ; TODO Chose which features to use to
+        X2         ($ 1 X) ; display charts. PCA?
+        outliers   (extract-outliers p M threshold)
+        hosts      (clojure.set/map-invert (:hosts data))]
+    (dorun
+     (for [[k v] (:metrics data)]
+       (view-feature ($ v X) k)))
+    (view-outliers X1 X2 states)
+    (println "Outliers: "
+             (conj-cols ($ :p outliers)
+                        ($map #(get hosts (int %)) :host outliers)))))
 
 (defn -main [& args]
-  (process (first args)))
+  (case (count args)
+    0 (println "Usage: program <filepath> [threshold]")
+    1 (process (first args) default-threshold)
+    2 (process (first args) (read-string (nth args 1)))))
