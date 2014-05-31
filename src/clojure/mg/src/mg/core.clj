@@ -174,18 +174,21 @@
   "Process input OpenTSDB file, find and display outliers."
   [filename threshold]
   (let [data       (prepare-data filename)
-        M          (summarize-data (:data data))      ; the whole matrix
-        X          (rescale-matrix (keep-features M)) ; keep only values
+        A          (summarize-data (:data data))
+        B          (keep-features A)
+        X          (rescale-matrix B)
         [mu sigma] (estimate-gaussian X)
-        p          (multivariate-normal X mu sigma)
+        p0         (multivariate-normal X mu sigma)
+        p          (rescale-feature p0)
         states     (mark-outliers p threshold)
-        X1         ($ 0 X) ; TODO Chose which features to use to
-        X2         ($ 1 X) ; display charts. PCA?
-        outliers   (extract-outliers p M threshold)
+        X1         ($ 0 B) ; TODO Chose which features to use to
+        X2         ($ 1 B) ; display charts. PCA?
+        outliers   (extract-outliers p A threshold)
         hosts      (clojure.set/map-invert (:hosts data))]
     (dorun
      (for [[k v] (:metrics data)]
-       (view-feature ($ v X) k)))
+       (view-feature ($ v B) k)))
+    (view-feature p "p(X)")
     (view-outliers X1 X2 states)
     (println "Outliers: "
              (nrow outliers)
