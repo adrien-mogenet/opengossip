@@ -19,7 +19,7 @@
             [incanter.charts :refer :all :as charts]))
 
 ; Outlier detection threshold.
-(def default-threshold 1e-05)
+(def default-threshold 1e-02)
 
 (defn estimate-gaussian
   "Returns gaussian parameters mu (mean vector) and sigma (covariance
@@ -38,7 +38,7 @@
   {:pre [(core/matrix? X)]}
   (let [Xt  (core/trans X)
         XtX (core/mmult Xt X)]
-    (mmult (core/solve X) Xt)))
+    (mmult (core/solve XtX) Xt)))
 
 (defn multivariate-normal
   "Computes the multivariate gaussian.
@@ -48,12 +48,12 @@
   [X mu sigma]
   (let [n  (core/length mu)
         MU (repeat (core/nrow X) mu)
-        X  (core/minus X MU)]
+        A  (core/minus X MU)]
     (core/mult
      (Math/pow (* 2 Math/PI) (/ (- n) 2))
      (Math/pow (core/det sigma) -0.5)
      (exp
-      (core/mult -0.5 (map core/sum (mult (core/mmult X (pinv sigma)) X)))))))
+      (core/mult -0.5 (map core/sum (core/mult (core/mmult A (solve sigma)) A)))))))
 
 (defn agg
   "Computes aggregation of `metric', using function `fn' on dataset `ds'.
@@ -190,6 +190,7 @@
        (view-feature ($ v B) k)))
     (view-feature p "p(X)")
     (view-outliers X1 X2 states)
+    (println "Metrics:" (count (:metrics data)))
     (println "Outliers: "
              (nrow outliers)
              (core/conj-cols ($ :p outliers)
