@@ -133,9 +133,9 @@
 (defn rescale-matrix
   "Rescale all the features of input matrix."
   [X]
-  (to-matrix
-   (reduce conj-cols
-           (map #(rescale-feature ($ % X)) (range (ncol X))))))
+  (core/to-matrix
+   (reduce core/conj-cols
+           (map #(rescale-feature ($ % X)) (range (core/ncol X))))))
 
 (defn mark-outliers
   "Returns the input list of m elements with true if element is an outlier,
