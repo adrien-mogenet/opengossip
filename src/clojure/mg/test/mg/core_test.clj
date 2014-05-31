@@ -112,3 +112,20 @@
             result     (extract-outliers p expected-matrix 1e-02)]
         (println result)
         (is (= [1 4] (dim result)))))
+
+(deftest test-rescale-feature
+  (testing "basic scaling features"
+    (is (= [0.5  0.0  1.0]
+           (rescale-feature [100 50 150]))))
+  (testing "unique value"
+    (is (= [0.0  0.0  0.0]
+           (rescale-feature [32 32 32])))))
+
+(deftest test-rescale-matrix
+  (testing "rescale-matrix"
+    (is (= (matrix [[0.5  1.0]
+                    [0.0  0.5]
+                    [1.0  0.0]])
+           (rescale-matrix (matrix [[100  15]
+                                    [ 50  10]
+                                    [150   5]]))))))

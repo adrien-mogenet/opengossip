@@ -140,7 +140,7 @@
   "Display results on a grid.
      X1:     Values for x1 axis
      X2:     Values for x2 axis
-     groups: Vector of boolean (true = outlier)"
+     states: Vector of boolean (true = outlier)"
   [X1 X2 states]
   {:pre [(= (dim X1) (dim X2))]}
   (let [plot (charts/scatter-plot X1 X2 :group-by states)]
@@ -157,8 +157,8 @@
   "Process input OpenTSDB file, find and display outliers."
   [filename threshold]
   (let [data       (prepare-data filename)
-        M          (summarize-data (:data data)) ; the whole matrix
-        X          (keep-features M)             ; keep only values
+        M          (summarize-data (:data data))      ; the whole matrix
+        X          (rescale-matrix (keep-features M)) ; keep only values
         [mu sigma] (estimate-gaussian X)
         p          (multivariate-normal X mu sigma)
         states     (mark-outliers p threshold)
@@ -171,6 +171,7 @@
        (view-feature ($ v X) k)))
     (view-outliers X1 X2 states)
     (println "Outliers: "
+             (nrow outliers)
              (core/conj-cols ($ :p outliers)
                              ($map #(get hosts (int %)) :host outliers)))))
 
