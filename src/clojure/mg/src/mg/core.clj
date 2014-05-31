@@ -120,6 +120,23 @@
   [X]
   ($ (rest (range (ncol X))) X))
 
+(defn rescale-feature
+  "Returns a rescaled sequence of values (belongs to [0, 1])."
+  [X]
+  (let [Xmin    (reduce min X) ; TODO: Compute both min and max
+        Xmax    (reduce max X) ; in a single step.
+        Xdiff   (- Xmax Xmin)
+        rescale (fn [x]
+                  (if (== Xdiff 0.0) 0.0 (float (/ (- x Xmin) Xdiff))))]
+    (map rescale X)))
+
+(defn rescale-matrix
+  "Rescale all the features of input matrix."
+  [X]
+  (to-matrix
+   (reduce conj-cols
+           (map #(rescale-feature ($ % X)) (range (ncol X))))))
+
 (defn mark-outliers
   "Returns the input list of m elements with true if element is an outlier,
   false otherwise."
